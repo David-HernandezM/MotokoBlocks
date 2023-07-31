@@ -7,7 +7,7 @@
     "setup": "npm i && dfx canister create backend && dfx generate backend && dfx deploy",
     "start": "run-p frontend backend",
     "startenv": "dfx start --clean --background",
-    "setback": "dfx canister create backend && dfx generate backend",
+    "setback": "dfx canister create backend && dfx generate backend && dfx canister install backend",
     "genback": "dfx generate backend",
     "updateback": "dfx generate backend && dfx canister install backend --mode upgrade",
     "frontend": "vite --port 3000",

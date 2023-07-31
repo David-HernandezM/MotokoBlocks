@@ -71,7 +71,6 @@ module {
         #Variable : Variable;
         #Assignment : Assignment;
         #Return : Types;
-        // #Code : [CodeBlock];
     };
 
     public type Assignment = {
@@ -131,7 +130,6 @@ module {
     public func compiler(program : Actor) : Result.Result<Text, CompilationError> {
         let programGlobalVariables = TrieMap.TrieMap<Text, (Types, Bool)>(Text.equal, Text.hash);
         let newLine = "\n";
-        // var linesCode = List.nil<Text>();
         var openCodeBlocks = 1;
         var code : Text = "actor " # program.actorName # " {" # newLine;
         for (variable in Array.vals(program.globalVariables)) {
@@ -155,7 +153,6 @@ module {
             };
             code := code # codeLine # textNewVariable # newLine;
         };
-        // code := code # newLine;
         for (function in Array.vals(program.functions)) {
             let codeLine = getNewLinesWithTabs(openCodeBlocks);
             code := switch (genNewFuncText(function, programGlobalVariables)) {
@@ -229,13 +226,13 @@ module {
                         };
                     };
                 };
-                codeText := codeText # tabsInBlock # newVariable # ";\n";
+                codeText := codeText # tabsInBlock # newVariable # "\n";
             };
             case (#Assignment(newAssignment)) {
                 let newVariableAssignmentText : Text = switch (globalVariables.get(newAssignment.variableName)) {
                     case (?variableData) {
                         if (variableData.1) {
-                            switch (genNewAssignmentText(newAssignment, variableData.0)) {
+                            switch (genNewAssignmentText(newAssignment, newAssignment.assignmentType)) {
                                 case (#ok(assignmentText)) {
                                     assignmentText;
                                 };
@@ -252,13 +249,13 @@ module {
                         return #err(#DuplicateGlobalVariable(errorMessage));
                     };
                 };
-                codeText := codeText # newVariableAssignmentText # "\n";
+                codeText := codeText # tabsInBlock # newVariableAssignmentText;
             };
             case (#Return(returnType)) {
                 codeText := switch(valueOfTypeToText(returnType)) {
                     case (#ok(result)) {
                         if (result.1 != #UnitValue) {
-                            "return " # result.0 # ";\n";
+                            codeText # tabsInBlock # "return " # result.0 # ";\n";
                         } else {
                             "";
                         };
@@ -337,6 +334,7 @@ module {
         #ok(newFunc);
     };
 
+    // Pending optimization   -------------------------------------------
     private func genNewVariableText(variable : Variable) : Result.Result<Text, CompilationError> {
         var variableStr = "";
         if (variable.isStable) {
@@ -348,18 +346,31 @@ module {
             variableStr := variableStr # "let ";
         };
         variableStr := variableStr # variable.variableName # " : ";
-        switch (variable.varValue) {
-            case (#NatVal(value)) {
-                variableStr := variableStr # "Nat = " # Nat.toText(value);
-            };
-            case (_) {
 
+        let varTypeText = switch (typeToText(variable.varType)) {
+            case (#ok(value)) {
+                value;
+            };
+            case (#err(error)) {
+                return #err(error);
             };
         };
-        variableStr := variableStr # ";";
+
+        let valueTypeText = switch (valueOfTypeToText(variable.varValue)) {
+            case (#ok(result)) {
+                result.0;
+            };
+            case (#err(error)) {
+                return #err(error);
+            };
+        };
+
+        variableStr := variableStr # varTypeText # " = " # valueTypeText # ";";
+
         #ok(variableStr);
     };
 
+    // Pending optimization     ---------------------------------------------
     private func genNewAssignmentText(assignment : Assignment, variableType : Types) : Result.Result<Text, CompilationError> {
         if (assignment.assignmentType != variableType) {
             let errMsg = switch (typeToText(variableType)) {
@@ -494,7 +505,7 @@ module {
                 parameterType := "Bool";
             };
             case (_) {
-                return #err(#UnknownType("Unknown type used"));
+                return #err(#UnknownType("Unknown type used first"));
             };
         };
         #ok(parameterType);
@@ -512,7 +523,7 @@ module {
                 #ok((Float.toText(value), #Float));
             };
             case (#StringVal(value)) {
-                #ok(value, #String);
+                #ok("\"" # value # "\"", #String);
             };
             case (#BooleanVal(value)) {
                 #ok((Bool.toText(value), #Boolean));

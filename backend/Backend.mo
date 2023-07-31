@@ -5,6 +5,7 @@ import Result "mo:base/Result";
 import Buffer "mo:base/Buffer";
 import List "mo:base/List";
 import Nat "mo:base/Nat";
+import Debug "mo:base/Debug";
 
 actor class Backend() {
   let { phash } = Map;
@@ -282,6 +283,7 @@ actor class Backend() {
     };
     switch (Utils.compiler(actorTest)) {
       case (#ok(programText)) {
+        Debug.print(debug_show("\n\n\n" # programText # "\n\n\n"));
         #ok(programText);
       };
       case (#err(error)) {
@@ -337,6 +339,7 @@ actor class Backend() {
     };
     switch (Utils.compiler(actorTest)) {
       case (#ok(programText)) {
+        Debug.print(debug_show("\n\n\n" # programText # "\n\n\n"));
         #ok(programText);
       };
       case (#err(error)) {
@@ -391,7 +394,7 @@ actor class Backend() {
       ];
       functions = [
         {
-          functionName = "testFun1";
+          functionName = "testFunc1";
           isPublic = true;
           isQuery = true;
           isShared = true;
@@ -417,7 +420,7 @@ actor class Backend() {
           body = [];
         },
         {
-          functionName = "testFun2";
+          functionName = "testFunc2";
           isPublic = true;
           isQuery = false;
           isShared = true;
@@ -524,6 +527,7 @@ actor class Backend() {
     };
     switch (Utils.compiler(actorTest)) {
       case (#ok(programText)) {
+        Debug.print(debug_show("\n\n\n" # programText # "\n\n\n"));
         #ok(programText);
       };
       case (#err(error)) {
@@ -546,70 +550,273 @@ actor class Backend() {
     };
     **/
     let actorTest : Utils.Actor = {
-        actorName = "Backend";
-        globalVariables = [
+      actorName = "test4";
+      globalVariables = [
+        {
+            variableName = "Primero";
+            isStable = true;
+            isMutable = true;
+            varValue = #NatVal(7);
+            varType = #Nat;
+            isParameter = false;
+        },
+        {
+            variableName = "Segundo";
+            isStable = true;
+            isMutable = false;
+            varValue = #NatVal(7);
+            varType = #Nat;
+            isParameter = false;
+        },
+        {
+            variableName = "Tercero";
+            isStable = false;
+            isMutable = true;
+            varValue = #NatVal(7);
+            varType = #Nat;
+            isParameter = false;
+        },
+        {
+            variableName = "Cuarto";
+            isStable = false;
+            isMutable = false;
+            varValue = #NatVal(7);
+            varType = #Nat;
+            isParameter = false;
+        }
+      ];
+      functions = [
+        {
+          functionName = "testFunc1";
+          isPublic = true;
+          isQuery = true;
+          isShared = true;
+          parameters = [
             {
-                variableName = "Primero";
+                  variableName = "a";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #IntVal(5);
+                  varType = #Int;
+                  isParameter = true;
+              },
+              {
+                  variableName = "b";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #NatVal(4);
+                  varType = #Nat;
+                  isParameter = true;
+              },
+          ];
+          returnType = #Nat;
+          body = [
+            #Variable ({
+                variableName = "z";
                 isStable = false;
                 isMutable = true;
-                varValue = #NatVal(7);
-                varType = #Nat;
+                varValue = #BooleanVal(false);
+                varType = #Boolean;
                 isParameter = false;
-            }
-        ];
-        functions = [
-              {
-                functionName = "testFunc";
-                isPublic = true;
-                isQuery = true;
-                isShared = true;
-                parameters = [
-                    {
-                        variableName = "a";
-                        isStable = false;
-                        isMutable = false;
-                        varValue = #NatVal(5);
-                        varType = #Nat;
-                        isParameter = true;
-                    },
-                    {
-                        variableName = "b";
-                        isStable = false;
-                        isMutable = false;
-                        varValue = #NatVal(4);
-                        varType = #Nat;
-                        isParameter = true;
-                    },
-                ];
-                returnType = #Int;
-                body = [
-                    #Variable ({
-                        variableName = "z";
-                        isStable = false;
-                        isMutable = true;
-                        varValue = #BooleanVal(false);
-                        varType = #Boolean;
-                        isParameter = false;
+            }),
+            #ControlFlow (
+              #If ((
+                "Condicional", 
+                [ 
+                    #Assignment ({
+                      variableName = "Primero";
+                      assignmentType = #Nat;
+                      assign = #NewValue(#NatVal(0)) 
                     }),
-                    #ControlFlow (
+                    #ControlFlow(
                       #If ((
-                        "Condicional", 
-                        [ 
-                          #Assignment ({
-                           variableName = "Primero";
-                           assignmentType = #Nat;
-                           assign = #NewValue(#NatVal(0)) 
-                          }) 
+                        "Condicional",
+                        [
+                          #Variable ({
+                            variableName = "hello";
+                            isStable = false;
+                            isMutable = false;
+                            varValue = #StringVal("Hola!");
+                            varType = #String;
+                            isParameter = false;
+                          }),
+                          #ControlFlow(
+                            #If ((
+                              "Condicional",
+                              [
+                                #Variable ({
+                                  variableName = "test";
+                                  isStable = false;
+                                  isMutable = false;
+                                  varValue = #FloatVal(5.5);
+                                  varType = #Float;
+                                  isParameter = false;
+                                }),
+                                #Variable ({
+                                  variableName = "test2";
+                                  isStable = false;
+                                  isMutable = true;
+                                  varValue = #FloatVal(5.5);
+                                  varType = #Float;
+                                  isParameter = false;
+                                }),
+                                #Return(#NatVal(0))
+                              ]
+                            ))
+                          )
                         ]
-                      )),
-                    ),
-                    #Return(#NatVal(6))
-                ];
-            }
-        ];
+                      ))
+                    )
+                ], 
+              )),
+            ),
+            #ControlFlow (
+              #If ((
+                "Condicional", 
+                [ 
+                    #Assignment ({
+                      variableName = "Tercero";
+                      assignmentType = #Nat;
+                      assign = #NewValue(#NatVal(0)) 
+                    }),
+                    #ControlFlow(
+                      #If ((
+                        "Condicional",
+                        [
+                          #Variable ({
+                            variableName = "hello";
+                            isStable = false;
+                            isMutable = false;
+                            varValue = #StringVal("Hola!");
+                            varType = #String;
+                            isParameter = false;
+                          })
+                        ]
+                      ))
+                    )
+                ], 
+              )),
+            ),
+            #Return(#NatVal(6))
+          ];
+        },
+        {
+          functionName = "testFunc2";
+          isPublic = true;
+          isQuery = false;
+          isShared = true;
+          parameters = [
+            {
+                  variableName = "a";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #IntVal(5);
+                  varType = #Int;
+                  isParameter = true;
+              },
+              {
+                  variableName = "b";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #NatVal(4);
+                  varType = #Nat;
+                  isParameter = true;
+              },
+          ];
+          returnType = #Nat;
+          body = [
+            #Return(#NatVal(0))
+          ];
+        },
+        {
+          functionName = "testFunc3";
+          isPublic = true;
+          isQuery = true;
+          isShared = false;
+          parameters = [
+            {
+                  variableName = "a";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #IntVal(5);
+                  varType = #Int;
+                  isParameter = true;
+              },
+              {
+                  variableName = "b";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #NatVal(4);
+                  varType = #Nat;
+                  isParameter = true;
+              },
+          ];
+          returnType = #Float;
+          body = [
+            #Return(#FloatVal(3.8))
+          ];
+        },
+        {
+          functionName = "testFunc4";
+          isPublic = true;
+          isQuery = false;
+          isShared = false;
+          parameters = [
+            {
+                  variableName = "a";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #IntVal(5);
+                  varType = #Int;
+                  isParameter = true;
+              },
+              {
+                  variableName = "b";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #NatVal(4);
+                  varType = #Nat;
+                  isParameter = true;
+              },
+          ];
+          returnType = #Boolean;
+          body = [
+            #Return(#BooleanVal(true))
+          ];
+        },
+        {
+          functionName = "testFunc5";
+          isPublic = false;
+          isQuery = false;
+          isShared = false;
+          parameters = [
+            {
+                  variableName = "a";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #IntVal(5);
+                  varType = #Int;
+                  isParameter = true;
+              },
+              {
+                  variableName = "b";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #NatVal(4);
+                  varType = #Nat;
+                  isParameter = true;
+              },
+          ];
+          returnType = #String;
+          body = [
+            #Return(#StringVal("test!"))
+          ];
+        },
+      ];
     };
     switch (Utils.compiler(actorTest)) {
       case (#ok(programText)) {
+        Debug.print(debug_show("\n\n\n" # programText # "\n\n\n"));
         #ok(programText);
       };
       case (#err(error)) {
