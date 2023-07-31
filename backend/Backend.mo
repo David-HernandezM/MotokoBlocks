@@ -191,7 +191,430 @@ actor class Backend() {
 
   // Compilador ------------------------
 
-  public shared query ({ caller }) func compileCodeWithId(programId : Nat) : async Text {
+  public shared query ({ caller }) func compileCodeWithId(programId : Nat) : async Result.Result<Text, Utils.UserError> {
+    if (Principal.isAnonymous(caller)) {
+      return #err(#Anonymous("Account can't be Anonymous"));
+    };
+    if (not Utils.principalIsLogged(loggedAccounts, caller)) {
+      return #err(#AccountNotLogged("Account is not logged"));
+    };
 
+    #ok("ok");
+  };
+
+  public shared query ({ caller }) func whoAmI() : async Principal {
+    let newActor : Utils.Actor = {
+        actorName = "Backend";
+        globalVariables = [
+            {
+                variableName = "Primero";
+                isStable = false;
+                isMutable = true;
+                varValue = #NatVal(7);
+                varType = #Nat;
+                isParameter = false;
+            }
+        ];
+        functions = [
+              {
+                functionName = "testFunc";
+                isPublic = true;
+                isQuery = true;
+                isShared = true;
+                parameters = [
+                    {
+                        variableName = "a";
+                        isStable = false;
+                        isMutable = false;
+                        varValue = #NatVal(5);
+                        varType = #Nat;
+                        isParameter = true;
+                    },
+                    {
+                        variableName = "b";
+                        isStable = false;
+                        isMutable = false;
+                        varValue = #NatVal(4);
+                        varType = #Nat;
+                        isParameter = true;
+                    },
+                ];
+                returnType = #Int;
+                body = [
+                    #Variable ({
+                        variableName = "z";
+                        isStable = false;
+                        isMutable = true;
+                        varValue = #BooleanVal(false);
+                        varType = #Boolean;
+                        isParameter = false;
+                    }),
+                    #ControlFlow (
+                      #If ((
+                        "Condicional", 
+                        [ 
+                          #Assignment ({
+                           variableName = "Primero";
+                           assignmentType = #Nat;
+                           assign = #NewValue(#NatVal(0)) 
+                          }) 
+                        ]
+                      )),
+                    ),
+                    #Return(#NatVal(6))
+                ];
+            }
+        ];
+    };
+
+    caller;
+  };
+
+  public func test1() : async Result.Result<Text, Utils.CompilationError> {
+    /**
+    actor test1 {
+    };
+    **/
+    let actorTest : Utils.Actor = {
+      actorName = "test1";
+      globalVariables = [];
+      functions = [];
+    };
+    switch (Utils.compiler(actorTest)) {
+      case (#ok(programText)) {
+        #ok(programText);
+      };
+      case (#err(error)) {
+        #err(error);
+      };
+    };
+  };
+
+  public func test2() : async Result.Result<Text, Utils.CompilationError> {
+    /**
+    actor test2 {
+      let x : Nat = 4;
+      var y : Int = -2;
+    };
+    **/
+    let actorTest : Utils.Actor = {
+      actorName = "test2";
+      globalVariables = [
+        {
+            variableName = "Primero";
+            isStable = true;
+            isMutable = true;
+            varValue = #NatVal(7);
+            varType = #Nat;
+            isParameter = false;
+        },
+        {
+            variableName = "Segundo";
+            isStable = true;
+            isMutable = false;
+            varValue = #NatVal(7);
+            varType = #Nat;
+            isParameter = false;
+        },
+        {
+            variableName = "Tercero";
+            isStable = false;
+            isMutable = true;
+            varValue = #NatVal(7);
+            varType = #Nat;
+            isParameter = false;
+        },
+        {
+            variableName = "Cuarto";
+            isStable = false;
+            isMutable = false;
+            varValue = #NatVal(7);
+            varType = #Nat;
+            isParameter = false;
+        }
+      ];
+      functions = [];
+    };
+    switch (Utils.compiler(actorTest)) {
+      case (#ok(programText)) {
+        #ok(programText);
+      };
+      case (#err(error)) {
+        #err(error);
+      };
+    };
+  };
+
+  public func test3() : async Result.Result<Text, Utils.CompilationError> {
+    /**
+    actor test3 {
+      public shared query ({caller}) func five() : Nat {
+        return 5;
+      };
+    };
+    **/
+    let actorTest : Utils.Actor = {
+      actorName = "test3";
+      globalVariables = [
+        {
+            variableName = "Primero";
+            isStable = true;
+            isMutable = true;
+            varValue = #NatVal(7);
+            varType = #Nat;
+            isParameter = false;
+        },
+        {
+            variableName = "Segundo";
+            isStable = true;
+            isMutable = false;
+            varValue = #NatVal(7);
+            varType = #Nat;
+            isParameter = false;
+        },
+        {
+            variableName = "Tercero";
+            isStable = false;
+            isMutable = true;
+            varValue = #NatVal(7);
+            varType = #Nat;
+            isParameter = false;
+        },
+        {
+            variableName = "Cuarto";
+            isStable = false;
+            isMutable = false;
+            varValue = #NatVal(7);
+            varType = #Nat;
+            isParameter = false;
+        }
+      ];
+      functions = [
+        {
+          functionName = "testFun1";
+          isPublic = true;
+          isQuery = true;
+          isShared = true;
+          parameters = [
+            {
+                  variableName = "a";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #IntVal(5);
+                  varType = #Int;
+                  isParameter = true;
+              },
+              {
+                  variableName = "b";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #NatVal(4);
+                  varType = #Nat;
+                  isParameter = true;
+              },
+          ];
+          returnType = #Nat;
+          body = [];
+        },
+        {
+          functionName = "testFun2";
+          isPublic = true;
+          isQuery = false;
+          isShared = true;
+          parameters = [
+            {
+                  variableName = "a";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #IntVal(5);
+                  varType = #Int;
+                  isParameter = true;
+              },
+              {
+                  variableName = "b";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #NatVal(4);
+                  varType = #Nat;
+                  isParameter = true;
+              },
+          ];
+          returnType = #Nat;
+          body = [];
+        },
+        {
+          functionName = "testFunc3";
+          isPublic = true;
+          isQuery = true;
+          isShared = false;
+          parameters = [
+            {
+                  variableName = "a";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #IntVal(5);
+                  varType = #Int;
+                  isParameter = true;
+              },
+              {
+                  variableName = "b";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #NatVal(4);
+                  varType = #Nat;
+                  isParameter = true;
+              },
+          ];
+          returnType = #Nat;
+          body = [];
+        },
+        {
+          functionName = "testFunc4";
+          isPublic = true;
+          isQuery = false;
+          isShared = false;
+          parameters = [
+            {
+                  variableName = "a";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #IntVal(5);
+                  varType = #Int;
+                  isParameter = true;
+              },
+              {
+                  variableName = "b";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #NatVal(4);
+                  varType = #Nat;
+                  isParameter = true;
+              },
+          ];
+          returnType = #Nat;
+          body = [];
+        },
+        {
+          functionName = "testFunc5";
+          isPublic = false;
+          isQuery = false;
+          isShared = false;
+          parameters = [
+            {
+                  variableName = "a";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #IntVal(5);
+                  varType = #Int;
+                  isParameter = true;
+              },
+              {
+                  variableName = "b";
+                  isStable = false;
+                  isMutable = false;
+                  varValue = #NatVal(4);
+                  varType = #Nat;
+                  isParameter = true;
+              },
+          ];
+          returnType = #Nat;
+          body = [];
+        },
+      ];
+    };
+    switch (Utils.compiler(actorTest)) {
+      case (#ok(programText)) {
+        #ok(programText);
+      };
+      case (#err(error)) {
+        #err(error);
+      };
+    };
+  };
+
+  public func test4() : async Result.Result<Text, Utils.CompilationError> {
+    /**
+    actor test4 {
+      var Primero : Nat = 7;
+      public shared query ({ caller }) func testFunc(a : Nat, b : Nat) : async Int {
+        var z : Bool = false;
+        if (Condicional) {
+          Primero := 0;
+        };
+        return 6;
+      };
+    };
+    **/
+    let actorTest : Utils.Actor = {
+        actorName = "Backend";
+        globalVariables = [
+            {
+                variableName = "Primero";
+                isStable = false;
+                isMutable = true;
+                varValue = #NatVal(7);
+                varType = #Nat;
+                isParameter = false;
+            }
+        ];
+        functions = [
+              {
+                functionName = "testFunc";
+                isPublic = true;
+                isQuery = true;
+                isShared = true;
+                parameters = [
+                    {
+                        variableName = "a";
+                        isStable = false;
+                        isMutable = false;
+                        varValue = #NatVal(5);
+                        varType = #Nat;
+                        isParameter = true;
+                    },
+                    {
+                        variableName = "b";
+                        isStable = false;
+                        isMutable = false;
+                        varValue = #NatVal(4);
+                        varType = #Nat;
+                        isParameter = true;
+                    },
+                ];
+                returnType = #Int;
+                body = [
+                    #Variable ({
+                        variableName = "z";
+                        isStable = false;
+                        isMutable = true;
+                        varValue = #BooleanVal(false);
+                        varType = #Boolean;
+                        isParameter = false;
+                    }),
+                    #ControlFlow (
+                      #If ((
+                        "Condicional", 
+                        [ 
+                          #Assignment ({
+                           variableName = "Primero";
+                           assignmentType = #Nat;
+                           assign = #NewValue(#NatVal(0)) 
+                          }) 
+                        ]
+                      )),
+                    ),
+                    #Return(#NatVal(6))
+                ];
+            }
+        ];
+    };
+    switch (Utils.compiler(actorTest)) {
+      case (#ok(programText)) {
+        #ok(programText);
+      };
+      case (#err(error)) {
+        #err(error);
+      };
+    };
   };
 };
