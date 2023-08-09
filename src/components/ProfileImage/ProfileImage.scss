@@ -1,0 +1,15 @@
+.profile-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: transparent;
+
+    .profile-image {
+        min-width: 100%;
+        min-height: 100%;  
+        object-fit:fill;      
+    }
+}

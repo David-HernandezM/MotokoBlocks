@@ -6,7 +6,7 @@ let backend = await Backend();
 
 let actorTextExpected : Text = "actor test1 {\n};";
 
-switch (await backend.test1()) {
+switch (await backend.testActorCodeOk()) {
     case (#ok(code)) {
         assert Text.equal(code, actorTextExpected);
     };

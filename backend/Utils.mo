@@ -24,6 +24,7 @@ module {
         #Anonymous : Text;
         #ProgramNotExists : Text;
         #WithoutPrograms : Text;
+        #ErrorInCompilation : CompilationError;
     };
 
     public type CompilationError = {
@@ -126,6 +127,20 @@ module {
         Buffer.contains<Principal>(accounts, user, Principal.equal);
     };
 
+    public func getProgramWithId(programId : Nat, userPrograms : List.List<ActorProgram>) : Result.Result<ActorProgram, UserError> {
+        let program = List.find<ActorProgram>(
+            userPrograms,
+            func actorProgram { actorProgram.id == programId }
+        );
+        switch (program) {
+            case (?currentProgram) {
+                return #ok(currentProgram);
+            };
+            case (_) {
+                #err(#ProgramNotExists("Program with id " # Nat.toText(programId) # " not exists"));
+            };
+        };
+    };
 
     public func compiler(program : Actor) : Result.Result<Text, CompilationError> {
         let programGlobalVariables = TrieMap.TrieMap<Text, (Types, Bool)>(Text.equal, Text.hash);

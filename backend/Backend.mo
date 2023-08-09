@@ -19,7 +19,7 @@ actor class Backend() {
     if (Utils.principalIsRegistered(counts, caller)) {
       return #err(#RegisterError("Account is already registered"));
     };
-    Map.set(counts, phash, caller, (0, List.nil()));
+    Map.set(counts, phash, caller, (1, List.nil()));
     #ok(());
   };
 
@@ -72,7 +72,7 @@ actor class Backend() {
         actors.1;
       };
       case (null) {
-        return #err(#AccountNotLogged("Account is not logged"));
+        return #err(#AccountNotLogged("Account is not registered"));
       };
     };
     if (List.isNil<Utils.ActorProgram>(userPrograms)) {
@@ -104,25 +104,14 @@ actor class Backend() {
         programs.1;
       };
       case (_) {
-        return #err(#AccountNotLogged("Account is not logged")); 
+        return #err(#AccountNotLogged("Account is not registered")); 
       };
     };
     if (List.isNil<Utils.ActorProgram>(userPrograms)) {
       return #err(#WithoutPrograms("The user has no programs"));
     };
 
-    let program = List.find<Utils.ActorProgram>(
-      userPrograms,
-      func actorProgram { actorProgram.id == actorId }
-    );
-    switch (program) {
-      case (?value) {
-        return #ok(value);
-      };
-      case (_) {
-        #err(#ProgramNotExists("Program with id " # Nat.toText(actorId) # " not exists"));
-      };
-    };
+    Utils.getProgramWithId(actorId, userPrograms);
   };
 
   public shared ({ caller }) func updateCodeWithId(programId : Nat, program : Utils.Actor) : async Result.Result<(), Utils.UserError> {
@@ -154,6 +143,10 @@ actor class Backend() {
         }
       }
     );
+    if (currentUserGeneralId == 0) {
+      let errorMessage = "Program with id " # Nat.toText(programId) # "does not exists";
+      return #err(#ProgramNotExists(errorMessage));
+    };
     let updatedProgram : Utils.ActorProgram = {
       program = program; 
       id = programId;
@@ -189,9 +182,6 @@ actor class Backend() {
     #ok(());
   };
 
-
-  // Compilador ------------------------
-
   public shared query ({ caller }) func compileCodeWithId(programId : Nat) : async Result.Result<Text, Utils.UserError> {
     if (Principal.isAnonymous(caller)) {
       return #err(#Anonymous("Account can't be Anonymous"));
@@ -200,356 +190,55 @@ actor class Backend() {
       return #err(#AccountNotLogged("Account is not logged"));
     };
 
-    #ok("ok");
-  };
-
-  public shared query ({ caller }) func whoAmI() : async Principal {
-    let newActor : Utils.Actor = {
-        actorName = "Backend";
-        globalVariables = [
-            {
-                variableName = "Primero";
-                isStable = false;
-                isMutable = true;
-                varValue = #NatVal(7);
-                varType = #Nat;
-                isParameter = false;
-            }
-        ];
-        functions = [
-              {
-                functionName = "testFunc";
-                isPublic = true;
-                isQuery = true;
-                isShared = true;
-                parameters = [
-                    {
-                        variableName = "a";
-                        isStable = false;
-                        isMutable = false;
-                        varValue = #NatVal(5);
-                        varType = #Nat;
-                        isParameter = true;
-                    },
-                    {
-                        variableName = "b";
-                        isStable = false;
-                        isMutable = false;
-                        varValue = #NatVal(4);
-                        varType = #Nat;
-                        isParameter = true;
-                    },
-                ];
-                returnType = #Int;
-                body = [
-                    #Variable ({
-                        variableName = "z";
-                        isStable = false;
-                        isMutable = true;
-                        varValue = #BooleanVal(false);
-                        varType = #Boolean;
-                        isParameter = false;
-                    }),
-                    #ControlFlow (
-                      #If ((
-                        "Condicional", 
-                        [ 
-                          #Assignment ({
-                           variableName = "Primero";
-                           assignmentType = #Nat;
-                           assign = #NewValue(#NatVal(0)) 
-                          }) 
-                        ]
-                      )),
-                    ),
-                    #Return(#NatVal(6))
-                ];
-            }
-        ];
+    let userProgram : List.List<Utils.ActorProgram> = switch (Map.get<Principal, Utils.UserProgramsType>(counts, phash, caller)) {
+      case (?actualPrograms) {
+        actualPrograms.1;
+      };
+      case (null) {
+        return #err(#RegisterError("User is not registered"));
+      };
     };
-
-    caller;
-  };
-
-  public func test1() : async Result.Result<Text, Utils.CompilationError> {
-    /**
-    actor test1 {
+    let program = switch (Utils.getProgramWithId(programId, userProgram)) {
+      case (#ok(currentProgram)) {
+        currentProgram.program;
+      };
+      case (#err(error)) {
+        return #err(error);
+      };
     };
-    **/
-    let actorTest : Utils.Actor = {
-      actorName = "test1";
-      globalVariables = [];
-      functions = [];
-    };
-    switch (Utils.compiler(actorTest)) {
+    switch (Utils.compiler(program)) {
       case (#ok(programText)) {
-        Debug.print(debug_show("\n\n\n" # programText # "\n\n\n"));
         #ok(programText);
       };
       case (#err(error)) {
-        #err(error);
+        #err(#ErrorInCompilation(error));
       };
     };
   };
 
-  public func test2() : async Result.Result<Text, Utils.CompilationError> {
-    /**
-    actor test2 {
-      let x : Nat = 4;
-      var y : Int = -2;
-    };
-    **/
-    let actorTest : Utils.Actor = {
-      actorName = "test2";
-      globalVariables = [
-        {
-            variableName = "Primero";
-            isStable = true;
-            isMutable = true;
-            varValue = #NatVal(7);
-            varType = #Nat;
-            isParameter = false;
-        },
-        {
-            variableName = "Segundo";
-            isStable = true;
-            isMutable = false;
-            varValue = #NatVal(7);
-            varType = #Nat;
-            isParameter = false;
-        },
-        {
-            variableName = "Tercero";
-            isStable = false;
-            isMutable = true;
-            varValue = #NatVal(7);
-            varType = #Nat;
-            isParameter = false;
-        },
-        {
-            variableName = "Cuarto";
-            isStable = false;
-            isMutable = false;
-            varValue = #NatVal(7);
-            varType = #Nat;
-            isParameter = false;
-        }
-      ];
-      functions = [];
-    };
-    switch (Utils.compiler(actorTest)) {
-      case (#ok(programText)) {
-        Debug.print(debug_show("\n\n\n" # programText # "\n\n\n"));
-        #ok(programText);
-      };
-      case (#err(error)) {
-        #err(error);
-      };
-    };
+  public query func compileProgram(program : Utils.Actor) : async Result.Result<Text, Utils.CompilationError> {
+    Utils.compiler(program);
   };
 
-  public func test3() : async Result.Result<Text, Utils.CompilationError> {
-    /**
-    actor test3 {
-      public shared query ({caller}) func five() : Nat {
-        return 5;
-      };
-    };
-    **/
-    let actorTest : Utils.Actor = {
-      actorName = "test3";
-      globalVariables = [
-        {
-            variableName = "Primero";
-            isStable = true;
-            isMutable = true;
-            varValue = #NatVal(7);
-            varType = #Nat;
-            isParameter = false;
-        },
-        {
-            variableName = "Segundo";
-            isStable = true;
-            isMutable = false;
-            varValue = #NatVal(7);
-            varType = #Nat;
-            isParameter = false;
-        },
-        {
-            variableName = "Tercero";
-            isStable = false;
-            isMutable = true;
-            varValue = #NatVal(7);
-            varType = #Nat;
-            isParameter = false;
-        },
-        {
-            variableName = "Cuarto";
-            isStable = false;
-            isMutable = false;
-            varValue = #NatVal(7);
-            varType = #Nat;
-            isParameter = false;
-        }
-      ];
-      functions = [
-        {
-          functionName = "testFunc1";
-          isPublic = true;
-          isQuery = true;
-          isShared = true;
-          parameters = [
-            {
-                  variableName = "a";
-                  isStable = false;
-                  isMutable = false;
-                  varValue = #IntVal(5);
-                  varType = #Int;
-                  isParameter = true;
-              },
-              {
-                  variableName = "b";
-                  isStable = false;
-                  isMutable = false;
-                  varValue = #NatVal(4);
-                  varType = #Nat;
-                  isParameter = true;
-              },
-          ];
-          returnType = #Nat;
-          body = [];
-        },
-        {
-          functionName = "testFunc2";
-          isPublic = true;
-          isQuery = false;
-          isShared = true;
-          parameters = [
-            {
-                  variableName = "a";
-                  isStable = false;
-                  isMutable = false;
-                  varValue = #IntVal(5);
-                  varType = #Int;
-                  isParameter = true;
-              },
-              {
-                  variableName = "b";
-                  isStable = false;
-                  isMutable = false;
-                  varValue = #NatVal(4);
-                  varType = #Nat;
-                  isParameter = true;
-              },
-          ];
-          returnType = #Nat;
-          body = [];
-        },
-        {
-          functionName = "testFunc3";
-          isPublic = true;
-          isQuery = true;
-          isShared = false;
-          parameters = [
-            {
-                  variableName = "a";
-                  isStable = false;
-                  isMutable = false;
-                  varValue = #IntVal(5);
-                  varType = #Int;
-                  isParameter = true;
-              },
-              {
-                  variableName = "b";
-                  isStable = false;
-                  isMutable = false;
-                  varValue = #NatVal(4);
-                  varType = #Nat;
-                  isParameter = true;
-              },
-          ];
-          returnType = #Nat;
-          body = [];
-        },
-        {
-          functionName = "testFunc4";
-          isPublic = true;
-          isQuery = false;
-          isShared = false;
-          parameters = [
-            {
-                  variableName = "a";
-                  isStable = false;
-                  isMutable = false;
-                  varValue = #IntVal(5);
-                  varType = #Int;
-                  isParameter = true;
-              },
-              {
-                  variableName = "b";
-                  isStable = false;
-                  isMutable = false;
-                  varValue = #NatVal(4);
-                  varType = #Nat;
-                  isParameter = true;
-              },
-          ];
-          returnType = #Nat;
-          body = [];
-        },
-        {
-          functionName = "testFunc5";
-          isPublic = false;
-          isQuery = false;
-          isShared = false;
-          parameters = [
-            {
-                  variableName = "a";
-                  isStable = false;
-                  isMutable = false;
-                  varValue = #IntVal(5);
-                  varType = #Int;
-                  isParameter = true;
-              },
-              {
-                  variableName = "b";
-                  isStable = false;
-                  isMutable = false;
-                  varValue = #NatVal(4);
-                  varType = #Nat;
-                  isParameter = true;
-              },
-          ];
-          returnType = #Nat;
-          body = [];
-        },
-      ];
-    };
-    switch (Utils.compiler(actorTest)) {
-      case (#ok(programText)) {
-        Debug.print(debug_show("\n\n\n" # programText # "\n\n\n"));
-        #ok(programText);
-      };
-      case (#err(error)) {
-        #err(error);
-      };
-    };
+  public query func getTestActor() : async Utils.Actor {
+    actorTest;
   };
 
-  public func test4() : async Result.Result<Text, Utils.CompilationError> {
-    /**
-    actor test4 {
-      var Primero : Nat = 7;
-      public shared query ({ caller }) func testFunc(a : Nat, b : Nat) : async Int {
-        var z : Bool = false;
-        if (Condicional) {
-          Primero := 0;
-        };
-        return 6;
-      };
-    };
-    **/
-    let actorTest : Utils.Actor = {
+  public query func getTestActorText() : async Result.Result<Text, Utils.CompilationError> {
+    Utils.compiler(actorTest);
+  };
+
+
+
+
+
+
+
+
+
+
+
+   let actorTest : Utils.Actor = {
       actorName = "test4";
       globalVariables = [
         {
@@ -813,15 +502,7 @@ actor class Backend() {
           ];
         },
       ];
-    };
-    switch (Utils.compiler(actorTest)) {
-      case (#ok(programText)) {
-        Debug.print(debug_show("\n\n\n" # programText # "\n\n\n"));
-        #ok(programText);
-      };
-      case (#err(error)) {
-        #err(error);
-      };
-    };
-  };
+    };   
+
+
 };

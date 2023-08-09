@@ -1,0 +1,24 @@
+.Button {
+    width: 105px;
+    height: 30px;
+    border-radius: 6px;
+    border: none;
+    font-weight: 500;
+    font-size: 15px;
+}
+
+.button-color-purple {
+    background-color: blueviolet;
+    color: white;
+};
+
+.button-color-blue {
+    background-color: blue;
+}
+
+.button-color-white, .button-color-default {
+    background-color: rgb(229, 229, 229);
+    color: black;
+    border: 1px rgba(0, 0, 0, 0.5) solid;
+}
+

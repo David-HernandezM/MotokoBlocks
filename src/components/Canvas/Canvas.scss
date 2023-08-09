@@ -1,0 +1,64 @@
+.maindiv {
+    display: grid;
+    place-items: center;
+    height: 500px;
+    width: 1000px;
+    border: solid 1px green;
+}
+
+.container {
+    border: 1px solid black;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+.box {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: hotpink;
+    height: 60px;
+    width: 60px;
+    cursor: pointer;
+}
+
+
+
+
+
+
+
+
+.EditorSpace {
+    background-color: rgb(196, 196, 156);
+    border: solid 2px black;
+    width: 350px;
+    height: 350px;
+}
+
+.test {
+    background-color: red;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.child {
+    background-color: blue;
+    width: 30px;
+    height: 30px;
+}
+
+.svgTest {
+    height: 350px;
+    width: 350px;
+    position: relative;
+    path {
+        fill: blue;
+        stroke: black;
+    }
+}
