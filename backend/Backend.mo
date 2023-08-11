@@ -12,6 +12,10 @@ actor class Backend() {
   stable let counts = Map.new<Principal, Utils.UserProgramsType>(phash);
   let loggedAccounts = Buffer.Buffer<Principal>(0);
 
+  public shared query ({ caller }) func whoAmI(): async Principal {
+    caller;
+  };
+
   public shared ({ caller }) func register() : async Result.Result<(), Utils.UserError> {
     if (Principal.isAnonymous(caller)) {
       return #err(#Anonymous("Account can't be Anonymous"));
@@ -30,7 +34,9 @@ actor class Backend() {
     if (not Utils.principalIsRegistered(counts, caller)) {
       return #err(#LoginError("Account is not registered"));
     };
-    loggedAccounts.add(caller);
+    if (not Utils.principalIsLogged(loggedAccounts, caller)) {
+      loggedAccounts.add(caller);
+    };
     #ok(());
   };
 

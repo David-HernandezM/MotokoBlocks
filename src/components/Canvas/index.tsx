@@ -51,41 +51,44 @@ const Canvas = () => {
   }
 
   const updateBlockCoords = (newCoords: {x: number; y: number}, blockId: string) => {
-    let blockUpdated: Array<VariableDataElement> = blocks.slice();
-    blockUpdated = blockUpdated.map(item => {
-      if (item.blockId === blockId) {
-        item.coords = newCoords;
-      }
-      return item;
-    });
-    setBlocks(blockUpdated);
-    console.log("Lista con bloque actualizado:");
-    console.log(blockUpdated);
-    console.log("Lista en el state");
-    console.log(blocks);
+    console.log("Cambiando nuevas coordenadas: ");
+    console.log(newCoords);
+    let dataBlock = blocks.find(item => item.blockId === blockId);
+
+    if (!dataBlock) return;
+
+    dataBlock.coords = newCoords;
+
+    setBlocks(blocks);
+
+    
+    
+    
+    // let blockUpdated: Array<VariableDataElement> = blocks.slice();
+    // blockUpdated = blockUpdated.map(item => {
+    //   if (item.blockId === blockId) {
+    //     item.coords = newCoords;
+    //   }
+    //   return item;
+    // });
+    // setBlocks(blockUpdated);
+    // console.log("Lista con bloque actualizado:");
+    // console.log(blockUpdated);
+    // console.log("Lista en el state");
+    // console.log(blocks);
   };
 
-  const moveToFirstPositionById = (blockId: string) => {
-    console.log("Lista actual:");
-    console.log(blocks);
-    let indexOfBlock: number = blocks.findIndex(item => item.blockId === blockId);
-    if (indexOfBlock == -1) {
-      console.log(`Element with id: ${blockId} does not exist`);
-      return;
-    }
-    let elementToChange = blocks[indexOfBlock];
-    let updatedListBlocks = blocks.filter(item => item.blockId);
-    updatedListBlocks.push(elementToChange);
-    console.log("Lista actualizada con id primero: " + blockId);  
-    console.log(updatedListBlocks);
-    setBlocks(updatedListBlocks);  
-    console.log("Lista en el state");
-    console.log(blocks);
-  };
 
   return (
     <div className='maindiv'>
       <button onClick={addVariable}>Create Variable</button>
+      <button onClick={() => {
+        console.log("Datos en la lista");
+        console.log(blocks);
+        console.log("Terminado de enseñas los bloques en la lista!")
+      }}>
+        Mostrar Bloques en editor.
+      </button>
       <svg className='container'>
         <path d='M 200 0 V 500' stroke='black' />
         {blocks.map((block, index) => {
@@ -100,7 +103,6 @@ const Canvas = () => {
                 isHolding={holdingBlock}
                 initialCoords={block.coords}
                 updateCoords={updateBlockCoords}
-                mouseEnter={moveToFirstPositionById}
               />
             )
           })}
@@ -110,3 +112,23 @@ const Canvas = () => {
 }
 
 export default Canvas;
+
+
+
+  // const moveToFirstPositionById = (blockId: string) => {
+  //   console.log("Lista actual:");
+  //   console.log(blocks);
+  //   let indexOfBlock: number = blocks.findIndex(item => item.blockId === blockId);
+  //   if (indexOfBlock == -1) {
+  //     console.log(`Element with id: ${blockId} does not exist`);
+  //     return;
+  //   }
+  //   let elementToChange = blocks[indexOfBlock];
+  //   let updatedListBlocks = blocks.filter(item => item.blockId);
+  //   updatedListBlocks.push(elementToChange);
+  //   console.log("Lista actualizada con id primero: " + blockId);  
+  //   console.log(updatedListBlocks);
+  //   setBlocks(updatedListBlocks);  
+  //   console.log("Lista en el state");
+  //   console.log(blocks);
+  // };

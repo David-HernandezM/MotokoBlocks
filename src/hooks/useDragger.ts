@@ -11,13 +11,12 @@ type CoordsType = {
 interface UseDraggerProps {
     blockId: string;
     setNewCoords: (setCoords: {x: number, y: number}) => void;
-    setIsHolding: (holding: boolean) => void;
+    setHolding: (holding: boolean) => void;
     initialCoords: {x: number; y: number};
-    mouseEnterInVariable: (enter: boolean) => void;
     isHolding: boolean;
 }
 
-function useDragger({blockId, setNewCoords, setIsHolding, isHolding, initialCoords, mouseEnterInVariable}: UseDraggerProps): void {
+function useDragger({blockId, setNewCoords, setHolding, isHolding, initialCoords}: UseDraggerProps): void {
     const isClicked = useRef<boolean>(false);
 
     const coords = useRef<CoordsType>({
@@ -42,14 +41,14 @@ function useDragger({blockId, setNewCoords, setIsHolding, isHolding, initialCoor
             isClicked.current = true;
             coords.current.startX = e.clientX;
             coords.current.startY = e.clientY;
-            setIsHolding(true);
+            setHolding(true);
         };
 
-        const onMouseUp = (e: MouseEvent) => {
+        const onMouseUp = async (e: MouseEvent) => {
             isClicked.current = false;
             coords.current.lastX = nextX;
             coords.current.lastY = nextY;
-            setIsHolding(false);
+            setHolding(false);
             setNewCoords ({
                 x: nextX,
                 y: nextY
@@ -58,33 +57,24 @@ function useDragger({blockId, setNewCoords, setIsHolding, isHolding, initialCoor
 
         const onMouseMove = (e: MouseEvent) => {
             if (!isClicked.current) return;
-            if (isHolding) {
-                console.log("Already holding!!");
-                return;
-            };
+            if (isHolding) return;
             nextX = e.clientX - coords.current.startX + coords.current.lastX;
             nextY = e.clientY - coords.current.startY + coords.current.lastY;
             target.setAttribute("transform", `translate(${nextX},${nextY}) scale(0.68)`);
         };
 
-        const onMouseEnter = () => {
-            mouseEnterInVariable(true);
-        }
-
         target.addEventListener('mousedown', onMouseDown);
         target.addEventListener('mouseup', onMouseUp);
-        target.addEventListener('mouseenter', onMouseEnter);
         
         container.addEventListener('mousemove', onMouseMove);
         container.addEventListener('mouseleave', onMouseUp);
 
         const cleanup = () => {
-        target.removeEventListener('mousedown', onMouseDown);
-        target.removeEventListener('mouseup', onMouseUp);
-        target.removeEventListener('mouseenter', onMouseEnter);
-        container.removeEventListener('mousemove', onMouseMove);
-        container.removeEventListener('mousemove', onMouseUp);
-    };
+            target.removeEventListener('mousedown', onMouseDown);
+            target.removeEventListener('mouseup', onMouseUp);
+            container.removeEventListener('mousemove', onMouseMove);
+            container.removeEventListener('mouseleave', onMouseUp);
+        };
 
         return cleanup;
     }, [blockId]);

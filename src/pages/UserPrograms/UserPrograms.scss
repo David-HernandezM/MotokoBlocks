@@ -1,0 +1,12 @@
+.no-programs {
+    width: 100%;
+    height: 500px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .no-programs-text {
+        font-size: 30px;
+        font-weight: 500;
+    }
+}
