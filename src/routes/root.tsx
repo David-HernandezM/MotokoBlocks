@@ -37,7 +37,7 @@ export default function Root() {
 
     switch (process.env.DFX_NETWORK) {
         case ("ic"):
-            urlProvider = `https://${internet_identity_id}.ic0.app`;
+            urlProvider = `https://identity.ic0.app/`;
         default:
             urlProvider = `http://${internet_identity_id}.localhost:4943`;
     }
@@ -46,7 +46,7 @@ export default function Root() {
 
     await new Promise<void>((resolve) => {
         authClient.login({
-            identityProvider: urlProvider,
+            // identityProvider: urlProvider,
             onSuccess: resolve,
             onError: () => {
                 setIsLoginID(false);
@@ -95,7 +95,7 @@ export default function Root() {
 
     switch (process.env.DFX_NETWORK) {
         case ("ic"):
-            urlProvider = `https://${internet_identity_id}.ic0.app`;
+            urlProvider = `https://identity.ic0.app/`;
         default:
             urlProvider = `http://${internet_identity_id}.localhost:4943`;
     }
@@ -104,7 +104,7 @@ export default function Root() {
 
     await new Promise<void>((resolve) => {
         authClient.login({
-            identityProvider: urlProvider,
+            // identityProvider: urlProvider,
             onSuccess: resolve,
             onError: () => {
                 setIsLoginID(false);
